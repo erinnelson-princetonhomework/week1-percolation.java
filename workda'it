@@ -1,0 +1,225 @@
+
+ 14
+ 15
+ 16
+ 17
+ 18
+ 19
+ 20
+ 21
+ 22
+ 23
+ 24
+ 25
+ 26
+ 27
+ 28
+ 29
+ 30
+ 31
+ 32
+ 33
+ 34
+ 35
+ 36
+ 37
+ 38
+ 39
+ 40
+ 41
+ 42
+ 43
+ 44
+ 45
+ 46
+ 47
+ 48
+ 49
+ 50
+ 51
+ 52
+ 53
+ 54
+ 55
+ 56
+ 57
+ 58
+ 59
+ 60
+ 61
+ 62
+ 63
+ 64
+ 65
+ 66
+ 67
+ 68
+ 69
+ 70
+ 71
+ 72
+ 73
+ 74
+ 75
+ 76
+ 77
+ 78
+ 79
+ 80
+ 81
+ 82
+ 83
+ 84
+ 85
+ 86
+ 87
+ 88
+ 89
+ 90
+ 91
+ 92
+ 93
+ 94
+ 95
+ 96
+ 97
+ 98
+ 99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+/*************************************************************************
+ * Name: Erin M Nelson
+ *
+ * Compilation:  javac Percolation.java
+ * Execution:
+ * Dependencies: WeightedQuickUnionUF.java
+ *
+  * Description: A  borrar type representing the state of the simulation  
+ *
+ *************************************************************************/
+
+público  class Percolation {
+    
+    private enum Tile {
+        BLOCKED,
+        OPEN,
+        FULL
+    }
+    
+    private Tile[][] tiles;
+    
+    private WeightedQuickUnionUF unionFind;
+    
+    público  Percolation(int n) {
+        
+        tiles     = new Tile[n][n];
+        unionFind = new WeightedQuickUnionUF(n * n + 2);
+        
+        for (int r = 0; r < n; r++) {
+            for (int c = 0; c < n; c++) {
+                tiles[r][c] = Tile.BLOCKED;
+            }
+        }
+    }
+    
+    público  void open(int i, int j) {
+        
+        tiles[i - 1][j - 1] = Tile.OPEN;
+        
+        if (i == 1) {
+            unionFind.union(j - 1, tiles.length * tiles.length);
+        }
+        
+        if (i == tiles.length) {
+            unionFind.union((tiles.length - 1) * tiles.length + (j - 1), tiles.length * tiles.length + 1);
+        }
+        
+        // top
+        unionTo(i, j, i - 1, j);
+        
+        // derecha 
+        unionTo(i, j, i, j + 1);
+        
+        // bottom
+        unionTo(i, j, i + 1, j);
+        
+        // left
+        unionTo(i, j, i, j - 1);
+    }
+    
+    private void unionTo(int i, int j, int i2, int j2) {
+        
+        if (i2 < 1 || i2 > tiles.length || j2 < 1 || j2 > tiles.length) {
+            return;
+        }
+        
+        if (isBlocked(i2, j2)) {
+            return;
+        }
+        
+        unionFind.union(
+            (i - 1) * tiles.length + (j - 1),
+            (i2 - 1) * tiles.length + (j2 - 1)
+        );
+    }
+    
+    private boolean isBlocked(int i, int j) {
+        
+        if (i < 1 || i > tiles.length || j < 1 || j > tiles.length) {
+            throw new java.lang.IndexOutOfBoundsException();
+        }
+        
+        return tiles[i - 1][j - 1] == Tile.BLOCKED;
+    }
+    
+    público  boolean isOpen(int i, int j) {
+        
+        if (i < 1 || i > tiles.length || j < 1 || j > tiles.length) {
+            throw new java.lang.IndexOutOfBoundsException();
+        }
+        
+        return tiles[i - 1][j - 1] == Tile.OPEN;
+    }
+    
+    público  boolean isFull(int i, int j) {
+        
+        if (i < 1 || i > tiles.length || j < 1 || j > tiles.length) {
+            throw new java.lang.IndexOutOfBoundsException();
+        }
+        
+        boolean connected = unionFind.connected(
+            tiles.length * tiles.length,
+            (i - 1) * tiles.length + (j - 1)
+        );
+        
+        boolean isOpen = isOpen(i, j);
+        
+        return connected && isOpen;
+    }
+    
+    público  boolean percolates() {
+        
+        return unionFind.connected(
+            tiles.length * tiles.length,
+            (tiles.length * tiles.length) + 1
+        );
+    }
+}
